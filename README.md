@@ -27,6 +27,23 @@ console.log(serialized);
 
 ### Configuration options
 
+Both the syntax extension and html extension can be configured by passing an object.
+
+For example, one may configure the syntax extension like so:
+
+```javascript
+let serialized = micromark('[[Wiki Link]]', {
+  extensions: [syntax({ aliasDivider: "|" })],
+  htmlExtensions: [html()]
+});
+```
+
+#### `syntax`
+
+* `options.aliasDivider [String]`: a string to be used as the divider for aliases. See the section below on [Aliasing pages](#aliasing-pages). Defaults to `":"`.
+
+#### `html`
+
 * `options.permalinks [String]`: An array of permalinks that should be considered existing pages. If a wiki link is parsed and its permalink matches one of these permalinks, `node.data.exists` will be true.
 * `options.pageResolver (pageName: String) -> [String]`: A function that maps a page name to an array of possible permalinks. These possible permalinks are cross-referenced with `options.permalinks` to determine whether a page exists. If a page doesn't exist, the first element of the array is considered the permalink.
 
@@ -44,11 +61,10 @@ console.log(serialized);
 (permalink) => `#/page/${permalink}`
 ```
 
-* `options.wikiLinkClassName`: a class name that is attached to any rendered wiki links. Defaults to `"internal"`.
-* `options.newClassName`: a class name that is attached to any rendered wiki links that do not exist. Defaults to `"new"`.
-* `options.aliasDivider`: a string to be used as the divider for aliases. See the section below on "Aliasing pages". Defaults to `":"`.
+* `options.wikiLinkClassName [String]`: a class name that is attached to any rendered wiki links. Defaults to `"internal"`.
+* `options.newClassName [String]`: a class name that is attached to any rendered wiki links that do not exist. Defaults to `"new"`.
 
-#### Aliasing pages
+### Aliasing pages
 
 Aliased pages are supported with the following markdown syntax: 
 
