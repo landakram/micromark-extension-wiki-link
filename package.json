@@ -25,8 +25,10 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "lint": "eslint src/",
+    "prepare": "npm run build",
     "pretest": "npm run build",
-    "test": "mocha --require @babel/register test/micromark_test.js"
+    "test": "npm run lint && mocha --require @babel/register test/micromark_test.js"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
