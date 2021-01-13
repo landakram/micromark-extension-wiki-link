@@ -1,5 +1,21 @@
 import { html } from './html'
 
+const codes = {
+  horizontalTab: -2,
+  virtualSpace: -1,
+  nul: 0,
+  eof: null,
+  space: 32
+}
+
+function markdownLineEndingOrSpace (code) {
+  return code < codes.nul || code === codes.space
+}
+
+function markdownLineEnding (code) {
+  return code < codes.horizontalTab
+}
+
 function wikiLink (opts = {}) {
   const aliasDivider = opts.aliasDivider || ':'
 
@@ -23,13 +39,13 @@ function wikiLink (opts = {}) {
       effects.enter('wikiLink')
       effects.enter('wikiLinkMarker')
 
-      return consumeStart
+      return consumeStart(code)
     }
 
     function consumeStart (code) {
       if (startMarkerCursor === startMarker.length) {
         effects.exit('wikiLinkMarker')
-        return consumeData
+        return consumeData(code)
       }
 
       if (code !== startMarker.charCodeAt(startMarkerCursor)) {
@@ -43,9 +59,14 @@ function wikiLink (opts = {}) {
     }
 
     function consumeData (code) {
+      if (markdownLineEnding(code) || code === codes.eof) {
+        effects.exit('wikiLink')
+        return nok(code)
+      }
+
       effects.enter('wikiLinkData')
       effects.enter('wikiLinkTarget')
-      return consumeTarget
+      return consumeTarget(code)
     }
 
     function consumeTarget (code) {
@@ -53,7 +74,7 @@ function wikiLink (opts = {}) {
         if (!data) return nok(code)
         effects.exit('wikiLinkTarget')
         effects.enter('wikiLinkAliasMarker')
-        return consumeAliasMarker
+        return consumeAliasMarker(code)
       }
 
       if (code === endMarker.charCodeAt(endMarkerCursor)) {
@@ -61,14 +82,21 @@ function wikiLink (opts = {}) {
         effects.exit('wikiLinkTarget')
         effects.exit('wikiLinkData')
         effects.enter('wikiLinkMarker')
-        return consumeEnd
+        return consumeEnd(code)
       }
 
-      if (!(code < 0 || code === 32)) {
+      if (markdownLineEnding(code) || code === codes.eof) {
+        effects.exit('wikiLinkTarget')
+        effects.exit('wikiLinkData')
+        effects.exit('wikiLink')
+        return nok(code)
+      }
+
+      if (!markdownLineEndingOrSpace(code)) {
         data = true
       }
 
-      effects.consume()
+      effects.consume(code)
 
       return consumeTarget
     }
@@ -77,7 +105,7 @@ function wikiLink (opts = {}) {
       if (aliasCursor === aliasMarker.length) {
         effects.exit('wikiLinkAliasMarker')
         effects.enter('wikiLinkAlias')
-        return consumeAlias
+        return consumeAlias(code)
       }
 
       if (code !== aliasMarker.charCodeAt(aliasCursor)) {
@@ -96,14 +124,14 @@ function wikiLink (opts = {}) {
         effects.exit('wikiLinkAlias')
         effects.exit('wikiLinkData')
         effects.enter('wikiLinkMarker')
-        return consumeEnd
+        return consumeEnd(code)
       }
 
-      if (!(code < 0 || code === 32)) {
+      if (!markdownLineEndingOrSpace(code)) {
         alias = true
       }
 
-      effects.consume()
+      effects.consume(code)
 
       return consumeAlias
     }
@@ -112,7 +140,7 @@ function wikiLink (opts = {}) {
       if (endMarkerCursor === endMarker.length) {
         effects.exit('wikiLinkMarker')
         effects.exit('wikiLink')
-        return ok
+        return ok(code)
       }
 
       if (code !== endMarker.charCodeAt(endMarkerCursor)) {
@@ -129,7 +157,7 @@ function wikiLink (opts = {}) {
   var call = { tokenize: tokenize }
 
   return {
-    text: { 91: call }
+    text: { 91: call } // left square bracket
   }
 }
 
