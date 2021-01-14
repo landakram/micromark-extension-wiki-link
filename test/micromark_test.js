@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import micromark from "micromark";
+import micromark from "micromark/lib";
 
 import { syntax, html } from '..';
 
@@ -40,6 +40,35 @@ describe('micromark-extension-wiki-link', () => {
     });
 
     assert.equal(serialized, '<p><a href="#/page/real_page" class="internal new">Page Alias</a></p>');
+  });
+
+  context("open wiki links", () => {
+    it("handles open wiki links", () => {
+      let serialized = micromark('t[[\nt', {
+        extensions: [syntax()],
+        htmlExtensions: [html()]
+      });
+
+      assert.equal(serialized, '<p>t[[\nt</p>');
+    });
+
+    it("handles open wiki links at end of file", () => {
+      let serialized = micromark('t [[', {
+        extensions: [syntax()],
+        htmlExtensions: [html()]
+      });
+
+      assert.equal(serialized, '<p>t [[</p>');
+    });
+
+    it("handles open wiki links with partial data", () => {
+      let serialized = micromark('t [[tt\nt', {
+        extensions: [syntax()],
+        htmlExtensions: [html()]
+      });
+
+      assert.equal(serialized, '<p>t [[tt\nt</p>');
+    });
   });
 
   context("configuration options", () => {
