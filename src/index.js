@@ -60,7 +60,6 @@ function wikiLink (opts = {}) {
 
     function consumeData (code) {
       if (markdownLineEnding(code) || code === codes.eof) {
-        effects.exit('wikiLink')
         return nok(code)
       }
 
@@ -86,9 +85,6 @@ function wikiLink (opts = {}) {
       }
 
       if (markdownLineEnding(code) || code === codes.eof) {
-        effects.exit('wikiLinkTarget')
-        effects.exit('wikiLinkData')
-        effects.exit('wikiLink')
         return nok(code)
       }
 
@@ -125,6 +121,10 @@ function wikiLink (opts = {}) {
         effects.exit('wikiLinkData')
         effects.enter('wikiLinkMarker')
         return consumeEnd(code)
+      }
+
+      if (markdownLineEnding(code) || code === codes.eof) {
+        return nok(code)
       }
 
       if (!markdownLineEndingOrSpace(code)) {
